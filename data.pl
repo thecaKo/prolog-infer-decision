@@ -385,11 +385,6 @@ melhor_decisao_impacto(P, Impacto, Acao, Meses) :-
         Lista),
     sort(Lista, [(_, Acao, Meses)|_]).
 
-% ================================
-% MODO EXPLICATIVO DE DECISÕES
-% ================================
-
-% Explicar por que uma certa decisão está (ou não) disponível
 
 explicar_decisao(P, Acao) :-
     \+ decisao(P, Acao, _),
@@ -397,7 +392,6 @@ explicar_decisao(P, Acao) :-
     !,
     fail.
 
-% Explicação específica: LOCKDOWN PARCIAL
 explicar_decisao(P, lockdown_parcial) :-
     decisao(P, lockdown_parcial, Meses),
     decisao_prioridade(lockdown_parcial, Prioridade, Impacto),
@@ -412,7 +406,6 @@ explicar_decisao(P, lockdown_parcial) :-
     format('  - Apoio da população em nível ~w (permite medidas restritivas).~n', [Apoio]),
     nl.
 
-% Explicação específica: INTERVENÇÃO ECONÔMICA
 explicar_decisao(P, intervencao_economica) :-
     decisao(P, intervencao_economica, Meses),
     decisao_prioridade(intervencao_economica, Prioridade, Impacto),
@@ -427,7 +420,6 @@ explicar_decisao(P, intervencao_economica) :-
     format('  - Reservas em nível ~w (permite intervenção mais forte).~n', [Res]),
     nl.
 
-% Explicação específica: PACOTE EMERGENCIAL
 explicar_decisao(P, pacote_emergencial) :-
     decisao(P, pacote_emergencial, Meses),
     decisao_prioridade(pacote_emergencial, Prioridade, Impacto),
@@ -442,7 +434,6 @@ explicar_decisao(P, pacote_emergencial) :-
     format('  - Reservas em nível ~w (limitadas, exige pacote emergencial).~n', [Res]),
     nl.
 
-% Explicação específica: REFORÇO DE HOSPITAIS
 explicar_decisao(P, reforco_hospitais) :-
     decisao(P, reforco_hospitais, Meses),
     decisao_prioridade(reforco_hospitais, Prioridade, Impacto),
@@ -457,7 +448,6 @@ explicar_decisao(P, reforco_hospitais) :-
     format('  - Infraestrutura em nível ~w (precisa reforço hospitalar).~n', [Infra]),
     nl.
 
-% Explicação específica: CHAMAR ONU
 explicar_decisao(P, chamar_onu) :-
     decisao(P, chamar_onu, Meses),
     decisao_prioridade(chamar_onu, Prioridade, Impacto),
@@ -472,7 +462,6 @@ explicar_decisao(P, chamar_onu) :-
     format('  - Infraestrutura em nível ~w (insuficiente, requer apoio internacional).~n', [Infra]),
     nl.
 
-% Explicação específica: REFORÇO POLICIAL
 explicar_decisao(P, reforco_policial) :-
     decisao(P, reforco_policial, Meses),
     decisao_prioridade(reforco_policial, Prioridade, Impacto),
@@ -487,7 +476,6 @@ explicar_decisao(P, reforco_policial) :-
     format('  - Apoio da população em nível ~w (legitima reforço policial).~n', [Apoio]),
     nl.
 
-% Explicação específica: DESLOCAR TROPAS
 explicar_decisao(P, deslocar_tropas) :-
     decisao(P, deslocar_tropas, Meses),
     decisao_prioridade(deslocar_tropas, Prioridade, Impacto),
@@ -502,7 +490,6 @@ explicar_decisao(P, deslocar_tropas) :-
     format('  - Apoio da população em nível ~w (aceita presença de tropas).~n', [Apoio]),
     nl.
 
-% Explicação específica: REFORMA DE INFRAESTRUTURA
 explicar_decisao(P, reforma_infraestrutura) :-
     decisao(P, reforma_infraestrutura, Meses),
     decisao_prioridade(reforma_infraestrutura, Prioridade, Impacto),
@@ -514,7 +501,6 @@ explicar_decisao(P, reforma_infraestrutura) :-
     format('  - Infraestrutura em nível ~w (demanda reforma estrutural).~n', [Infra]),
     nl.
 
-% Explicação específica: PLANO DE ESTABILIZAÇÃO
 explicar_decisao(P, plano_estabilizacao) :-
     decisao(P, plano_estabilizacao, Meses),
     decisao_prioridade(plano_estabilizacao, Prioridade, Impacto),
@@ -530,7 +516,6 @@ explicar_decisao(P, plano_estabilizacao) :-
     format('  - Apoio da população em nível ~w (necessário para medidas de estabilização).~n', [Apoio]),
     nl.
 
-% Explicação genérica para demais decisões
 explicar_decisao(P, Outra) :-
     decisao(P, Outra, Meses),
     decisao_prioridade(Outra, Prioridade, Impacto),
@@ -539,7 +524,6 @@ explicar_decisao(P, Outra) :-
     format('Prioridade: ~w, Impacto: ~w~n', [Prioridade, Impacto]),
     nl.
 
-% Explicar diretamente a melhor decisão atual de um país
 explicar_melhor_decisao(P) :-
     (   melhor_decisao(P, nenhuma, 0)
     ->  format('Nenhuma decisão disponível para ~w.~n', [P])

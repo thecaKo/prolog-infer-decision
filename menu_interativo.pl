@@ -1,10 +1,6 @@
-% Menu Interativo - Sistema de Decisão em Prolog
-% Transforma o sistema em uma aplicação de linha de comando
-
 :- consult('data.pl').
 :- consult('explorar_espaco.pl').
 
-% Menu principal
 menu :-
     limpar_tela,
     write('========================================'), nl,
@@ -30,7 +26,6 @@ menu :-
     ;   write('~nSaindo...'), nl
     ).
 
-% Processar opção escolhida
 processar_opcao(1) :- menu_manual.
 processar_opcao(2) :- menu_backtracking.
 processar_opcao(3) :- menu_melhor_decisao.
@@ -44,25 +39,19 @@ processar_opcao(0) :- true.
 processar_opcao(_) :-
     write('Opção inválida!'), nl.
 
-% Limpar tela (pula várias linhas para simular limpeza)
 limpar_tela :-
     nl, nl, nl, nl, nl.
 
-% ========================================
-% OPÇÃO 1: MANUAL - Configurar país manualmente (incremental)
-% ========================================
 menu_manual :-
     limpar_tela,
     write('========================================'), nl,
     write('MANUAL - Configurar País (Incremental)'), nl,
     write('========================================'), nl, nl,
     
-    % Pergunta o país primeiro
     write('Digite o nome do país:'), nl,
     read(Pais),
     nl,
     
-    % Limpa dados anteriores deste país
     retractall(crise_economica(Pais, _, _, _, _, _)),
     retractall(crise_saude(Pais, _, _, _, _, _)),
     retractall(crise_seguranca(Pais, _, _, _, _, _)),
@@ -74,13 +63,11 @@ menu_manual :-
     format('✓ País ~w selecionado~n', [Pais]),
     nl,
     
-    % Coleta dados incrementalmente
     coletar_dados_incremental(Pais),
     
     nl,
     write('✓ Configuração completa!'), nl.
 
-% Coleta dados incrementalmente (sem verificação)
 coletar_dados_incremental(Pais) :-
     write('--- CRISE ECONÔMICA ---'), nl,
     ler_crise(Pais, crise_economica),
@@ -109,51 +96,41 @@ coletar_dados_incremental(Pais) :-
     read(Res),
     assertz(reservas(Pais, Res)).
 
-% Coleta dados incrementalmente (sem verificação intermediária)
 coletar_dados_incremental_com_verificacao(Pais, TipoConsulta) :-
     write('Vou coletar todos os dados necessários.'), nl, nl,
     
-    % Coleta crise econômica
     write('--- CRISE ECONÔMICA ---'), nl,
     ler_crise(Pais, crise_economica),
     
-    % Coleta crise de saúde
     write('--- CRISE DE SAÚDE ---'), nl,
     ler_crise(Pais, crise_saude),
     
-    % Coleta crise de segurança
     write('--- CRISE DE SEGURANÇA ---'), nl,
     ler_crise(Pais, crise_seguranca),
     
-    % Coleta crise social
     write('--- CRISE SOCIAL ---'), nl,
     ler_crise(Pais, crise_social),
     
-    % Coleta infraestrutura
     write('--- INFRAESTRUTURA ---'), nl,
     write('Nível (boa/media/ruim):'), nl,
     read(Infra),
     assertz(infraestrutura(Pais, Infra)),
     
-    % Coleta apoio
     write('--- APOIO DA POPULAÇÃO ---'), nl,
     write('Nível (baixo/medio/alto):'), nl,
     read(Apoio),
     assertz(apoio_populacao(Pais, Apoio)),
     
-    % Coleta reservas
     write('--- RESERVAS ---'), nl,
     write('Nível (baixo/alto):'), nl,
     read(Res),
     assertz(reservas(Pais, Res)),
     
-    % Mostra resultado final
     nl,
     write('>>> Todos os dados coletados. Resultado final:'), nl,
     executar_consulta(Pais, TipoConsulta).
 
 
-% Executa a consulta solicitada
 executar_consulta(Pais, melhor_decisao) :-
     (   melhor_decisao(Pais, Acao, Meses)
     ->  (   Acao == nenhuma
@@ -192,9 +169,7 @@ ler_crise(Pais, TipoCrise) :-
     ->  assertz(crise_social(Pais, Nivel, Tendencia, Severidade, Impacto, Variacao))
     ).
 
-% ========================================
-% OPÇÃO 2: BACKTRACKING - Explorar cenários
-% ========================================
+
 menu_backtracking :-
     limpar_tela,
     write('========================================'), nl,
@@ -235,21 +210,17 @@ menu_backtracking :-
     ),
     nl.
 
-% ========================================
-% OPÇÃO 3: Ver melhor decisão
-% ========================================
+
 menu_melhor_decisao :-
     limpar_tela,
     write('========================================'), nl,
     write('MELHOR DECISÃO'), nl,
     write('========================================'), nl, nl,
     
-    % Pergunta o país
     write('Digite o nome do país:'), nl,
     read(Pais),
     nl,
     
-    % Verifica se o país tem dados configurados
     (   coletar_dados_faltantes(Pais, Faltantes),
         Faltantes = []
     ->  % País tem todos os dados, mostra melhor decisão
@@ -261,9 +232,6 @@ menu_melhor_decisao :-
         nl
     ).
 
-% ========================================
-% OPÇÃO 4: Listar decisões por impacto
-% ========================================
 menu_listar_por_impacto :-
     limpar_tela,
     write('========================================'), nl,
@@ -276,9 +244,6 @@ menu_listar_por_impacto :-
     listar_decisoes_por_impacto(Pais),
     nl.
 
-% ========================================
-% OPÇÃO 5: Explicar decisão
-% ========================================
 menu_explicar_decisao :-
     limpar_tela,
     write('========================================'), nl,
@@ -296,9 +261,6 @@ menu_explicar_decisao :-
     ),
     nl.
 
-% ========================================
-% OPÇÃO 6: Avaliar país
-% ========================================
 menu_avaliar_pais :-
     limpar_tela,
     write('========================================'), nl,
@@ -320,11 +282,9 @@ menu_avaliar_pais :-
     ),
     nl.
 
-% Mostra os pesos (valores) de cada dado inserido
 mostrar_pesos_detalhados(Pais) :-
     write('=== PESOS DE CADA DADO INSERIDO ==='), nl, nl,
     
-    % Crise Econômica
     (   crise_economica(Pais, EcN, EcT, EcS, EcI, EcV),
         nivel_valor(EcN, EcNV),
         tendencia_valor(EcT, EcTV),
@@ -343,7 +303,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Crise de Saúde
     (   crise_saude(Pais, SaN, SaT, SaS, SaI, SaV),
         nivel_valor(SaN, SaNV),
         tendencia_valor(SaT, SaTV),
@@ -362,7 +321,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Crise de Segurança
     (   crise_seguranca(Pais, SeN, SeT, SeS, SeI, SeV),
         nivel_valor(SeN, SeNV),
         tendencia_valor(SeT, SeTV),
@@ -381,7 +339,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Crise Social
     (   crise_social(Pais, SoN, SoT, SoS, SoI, SoV),
         nivel_valor(SoN, SoNV),
         tendencia_valor(SoT, SoTV),
@@ -400,7 +357,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Infraestrutura
     (   infraestrutura(Pais, Infra),
         nivel_valor(Infra, InfraV)
     ->  write('INFRAESTRUTURA:'), nl,
@@ -409,7 +365,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Apoio da População
     (   apoio_populacao(Pais, Apoio),
         nivel_valor(Apoio, ApoioV)
     ->  write('APOIO DA POPULAÇÃO:'), nl,
@@ -418,7 +373,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Reservas
     (   reservas(Pais, Reservas),
         nivel_valor(Reservas, ReservasV)
     ->  write('RESERVAS:'), nl,
@@ -427,7 +381,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ),
     
-    % Score total do país
     (   score_pais(Pais, ScoreTotal)
     ->  write('=== RESUMO ==='), nl,
         format('Score Total Bruto: ~w~n', [ScoreTotal]),
@@ -436,9 +389,6 @@ mostrar_pesos_detalhados(Pais) :-
     ;   true
     ).
 
-% ========================================
-% OPÇÃO 7: Comparar países
-% ========================================
 menu_comparar_paises :-
     limpar_tela,
     write('========================================'), nl,
@@ -452,7 +402,6 @@ menu_comparar_paises :-
     
     write('--- COMPARAÇÃO ---'), nl, nl,
     
-    % País 1
     (   melhor_decisao(P1, A1, M1),
         avaliar_pais(P1, S1, C1)
     ->  format('~w:~n', [P1]),
@@ -462,7 +411,6 @@ menu_comparar_paises :-
     ),
     nl,
     
-    % País 2
     (   melhor_decisao(P2, A2, M2),
         avaliar_pais(P2, S2, C2)
     ->  format('~w:~n', [P2]),
@@ -472,9 +420,7 @@ menu_comparar_paises :-
     ),
     nl.
 
-% ========================================
-% OPÇÃO 8: Exemplos pré-configurados
-% ========================================
+
 menu_exemplos :-
     limpar_tela,
     write('========================================'), nl,
@@ -514,9 +460,7 @@ menu_exemplos :-
     ),
     nl.
 
-% ========================================
-% OPÇÃO 9: Ajuda
-% ========================================
+
 menu_ajuda :-
     limpar_tela,
     write('========================================'), nl,
@@ -549,7 +493,7 @@ menu_ajuda :-
     write('Apoio: baixo, medio, alto'), nl,
     write('Reservas: baixo, alto'), nl, nl.
 
-% Executar menu
+
 iniciar :-
     menu.
 

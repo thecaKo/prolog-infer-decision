@@ -59,37 +59,12 @@ score_pais(P, ScoreFinal) :-
     nivel_valor(Re, ReV),
     ScoreFinal is S1 + S2 + S3 + S4 + InV + ApV + ReV.
 
-% Normaliza o score numa escala de 0 a 100
-score_pais_normalizado(P, ScoreNormalizado) :-
-    score_pais(P, Score),
-    ScoreNormalizado is (Score / 77) * 100.
-
-classificar_score(Score, 'Estável') :- Score =< 20.
-classificar_score(Score, 'Moderado') :- Score > 20, Score =< 50.
-classificar_score(Score, 'Grave') :- Score > 50, Score =< 75.
-classificar_score(Score, 'Colapso') :- Score > 75.
-
-avaliar_pais(P, Score, Classificacao) :-
-    score_pais_normalizado(P, Score),
-    classificar_score(Score, Classificacao).
-
 % Verifica se pelo menos uma crise nesse estado existe
 crise_grave(P) :-
     (crise_economica(P, alto, _, _, _, _);
      crise_saude(P, alto, _, _, _, _);
      crise_seguranca(P, alto, _, _, _, _)).
 
-crise_moderada(P) :-
-    (crise_economica(P, medio, _, _, _, _);
-     crise_saude(P, medio, _, _, _, _);
-     crise_seguranca(P, medio, _, _, _, _)).
-
-crise_leve(P) :-
-    crise_economica(P, baixo, _, _, _, _),
-    crise_saude(P, baixo, _, _, _, _),
-    crise_seguranca(P, baixo, _, _, _, _).
-
-infra_boa(P) :- infraestrutura(P, boa).
 infra_media(P) :- infraestrutura(P, media).
 infra_ruim(P) :- infraestrutura(P, ruim).
 
@@ -234,25 +209,55 @@ coletar_dados_faltantes(P, Faltantes) :-
         (\+ reservas(P, _), Dado = reservas)
     ), Faltantes).
 
+avaliar_pais(Score, Estado) :-
+    number(Score),
+    Score < 10,
+    Estado = 'de boa', !.
+
+avaliar_pais(Score, Estado) :-
+    number(Score),
+    Score >= 10, Score =< 15,
+    Estado = 'de boa também (quase normal)', !.
+
+avaliar_pais(Score, Estado) :-
+    number(Score),
+    Score > 15, Score < 30,
+    Estado = 'normalzinho', !.
+
+avaliar_pais(Score, Estado) :-
+    number(Score),
+    Score >= 30, Score < 40,
+    Estado = 'tá se lascando / tamo se lascando', !.
+
+avaliar_pais(Score, Estado) :-
+    number(Score),
+    Score >= 40,
+    Estado = 'lascou'.
+
+avaliar_pais(Pais, Resultado) :-
+    score_pais(Pais, Score),
+    Score < 10,
+    Resultado = 'de boa', !.
+
+avaliar_pais(Pais, Resultado) :-
+    score_pais(Pais, Score),
+    Score > 15, Score < 30,
+    Resultado = 'normalzinho', !.
+
+avaliar_pais(Pais, Resultado) :-
+    score_pais(Pais, Score),
+    Score > 30, Score < 40,
+    Resultado = 'tamo se lascando', !.
+
+avaliar_pais(Pais, Resultado) :-
+    score_pais(Pais, Score),
+    Score >= 40,
+    Resultado = 'lascou', !.
+
 mostrar_resto_faltantes([]).
 mostrar_resto_faltantes([F | Resto]) :-
     format(', ~w', [F]),
     mostrar_resto_faltantes(Resto).
-
-% Função auxiliar para validar e mostrar dados faltantes
-validar_e_mostrar_dados_faltantes(P) :-
-    coletar_dados_faltantes(P, Faltantes),
-    Faltantes \= [],
-    Faltantes = [Primeiro | Resto],
-    format('Impossível amigão: ainda falta ~w', [Primeiro]),
-    mostrar_resto_faltantes(Resto),
-    format('~n', []),
-    !.
-
-mostrar_dados_faltantes(P) :-
-    validar_e_mostrar_dados_faltantes(P).
-
-mostrar_dados_faltantes(_).
 
 validar_dados_completos(P) :-
     coletar_dados_faltantes(P, Faltantes),
@@ -279,85 +284,12 @@ melhor_decisao(P, Acao, Meses) :-
     Lista \= [],
     sort(Lista, [(_, Acao, Meses) | _]).
 
-melhor_decisao_considerando_impacto(P, _Acao, _Meses, _ImpactoDesejado) :-
-    coletar_dados_faltantes(P, Faltantes),
-    Faltantes \= [],
-    Faltantes = [Primeiro | Resto],
-    format('Impossível amigão: ainda falta ~w', [Primeiro]),
-    mostrar_resto_faltantes(Resto),
-    format('~n', []),
-    !,
-    fail.
-
-melhor_decisao_considerando_impacto(P, Acao, Meses, ImpactoDesejado) :-
-    findall(
-        (Prioridade-ValorImpacto-A-M-I),
-        (
-            decisao(P, A, M),
-            decisao_prioridade(A, Prioridade, I),
-            I == ImpactoDesejado,
-            impacto_valor(I, ValorImpacto)
-        ),
-        Lista
-    ),
-    Lista \= [],
-    keysort(Lista, ListaOrdenada),
-    ListaOrdenada = [(_-_-Acao-Meses-ImpactoDesejado) | _].
-
-
 listar_decisoes_com_impacto(P) :-
     decisao(P, Acao, Meses),
     decisao_prioridade(Acao, Prioridade, Impacto),
     format("Prioridade: ~w, Acao: ~w, Meses: ~w, Impacto: ~w~n", [Prioridade, Acao, Meses, Impacto]),
     fail.
 listar_decisoes_com_impacto(_).
-
-% Função auxiliar para listar decisões de um impacto específico
-listar_decisoes_por_impacto_auxiliar(P, Impacto) :-
-    format('--- IMPACTO ~w ---~n', [Impacto]),
-    (   findall((Prioridade, Acao, Meses),
-            (decisao_com_impacto(P, Impacto, Acao, Meses),
-             decisao_prioridade(Acao, Prioridade, Impacto)),
-            Lista),
-        Lista \= []
-    ->  sort(Lista, ListaOrd),
-        forall(member((Prio, A, M), ListaOrd),
-            format('  Prioridade ~w: ~w (~w meses)~n', [Prio, A, M]))
-    ;   write('  Nenhuma decisão disponível'), nl
-    ),
-    nl.
-
-listar_decisoes_por_impacto(P) :-
-    write('=== DECISÕES DISPONÍVEIS POR IMPACTO ==='), nl, nl,
-    listar_decisoes_por_impacto_auxiliar(P, alto),
-    listar_decisoes_por_impacto_auxiliar(P, medio),
-    listar_decisoes_por_impacto_auxiliar(P, baixo).
-
-melhor_decisao_por_impacto(P, Resultados) :-
-    findall(
-        (Impacto-Acao-Meses),
-        (
-            member(Impacto, [alto, medio, baixo]),
-            melhor_decisao_considerando_impacto(P, Acao, Meses, Impacto)
-        ),
-        Resultados
-    ).
-
-melhor_decisao_impacto_minimo(P, ImpactoMin, Acao, Meses) :-
-    impacto_valor(ImpactoMin, ValorMin),
-    findall(
-        (Prioridade-ValorImpacto-A-M-I),
-        (
-            decisao(P, A, M),
-            decisao_prioridade(A, Prioridade, I),
-            impacto_valor(I, ValorImpacto),
-            ValorImpacto >= ValorMin
-        ),
-        Lista
-    ),
-    keysort(Lista, ListaOrdenada),
-    ListaOrdenada = [(_-_-Acao-Meses-_)|_].
-
 
 % Função unificada para decisões por impacto
 decisao_com_impacto(P, Impacto, Acao, Meses) :-
@@ -373,15 +305,6 @@ decisao_com_impacto_medio(P, Acao, Meses) :-
 
 decisao_com_impacto_alto(P, Acao, Meses) :-
     decisao_com_impacto(P, alto, Acao, Meses).
-
-melhor_decisao_impacto(P, Impacto, Acao, Meses) :-
-    findall((Prioridade, A, M),
-        (decisao_com_impacto(P, Impacto, A, M),
-         decisao_prioridade(A, Prioridade, Impacto)),
-        Lista),
-    Lista \= [],
-    sort(Lista, [(_, Acao, Meses)|_]).
-
 
 % Função auxiliar para exibir cabeçalho comum de explicação
 explicar_decisao_cabecalho(_P, Acao, Meses, Prioridade, Impacto) :-
@@ -554,8 +477,8 @@ explicar_decisao(P, programa_social) :-
     nl.
 
 explicar_decisao(P, Outra) :-
-    \+ member(Outra, [lockdown_parcial, intervencao_economica, pacote_emergencial, 
-                      reforco_hospitais, chamar_onu, reforco_policial, 
+    \+ member(Outra, [lockdown_parcial, intervencao_economica, pacote_emergencial,
+                      reforco_hospitais, chamar_onu, reforco_policial,
                       deslocar_tropas, reforma_infraestrutura, plano_estabilizacao,
                       acordo_internacional, contencao_social, reforma_tributaria,
                       campanha_confianca, programa_social]),
@@ -563,10 +486,3 @@ explicar_decisao(P, Outra) :-
     decisao_prioridade(Outra, Prioridade, Impacto),
     explicar_decisao_cabecalho(P, Outra, Meses, Prioridade, Impacto),
     nl.
-
-explicar_melhor_decisao(P) :-
-    (   melhor_decisao(P, nenhuma, 0)
-    ->  format('Nenhuma decisão disponível para ~w.~n', [P])
-    ;   melhor_decisao(P, Acao, _),
-        explicar_decisao(P, Acao)
-    ).
